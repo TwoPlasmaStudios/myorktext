@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyorkText Editor</title>
+    <style>
+        :root {
+            --toolbar-bg: #f8f9fa;
+            --toolbar-border: #dee2e6;
+            --button-hover: #e9ecef;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Aptos', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        .toolbar {
+            padding: 10px;
+            background: var(--toolbar-bg);
+            border-bottom: 1px solid var(--toolbar-border);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .toolbar button, .toolbar select {
+            padding: 6px 12px;
+            border: 1px solid #ced4da;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: 80px;
+        }
+
+        .toolbar button:hover {
+            background: var(--button-hover);
+        }
+
+        #editor {
+            width: 100%;
+            height: 90vh;
+            padding: 20px;
+            border: none;
+            resize: none;
+            font-size: 12pt;
+            line-height: 1.5;
+            outline: none;
+        }
+
+        .status-bar {
+            padding: 8px;
+            background: var(--toolbar-bg);
+            border-top: 1px solid var(--toolbar-border);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .lang-switcher {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="lang-switcher">
+        <select id="language" onchange="changeLanguage(this.value)">
+            <option value="tr">Türkçe</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+
+    <div class="toolbar">
+        <button data-lang-key="new" onclick="newFile()"></button>
+        <button data-lang-key="open" onclick="openFile()"></button>
+        <button data-lang-key="save" onclick="saveFile()"></button>
+        
+        <select id="fontFamily" data-lang-key="font">
+            <option value="Aptos">Aptos</option>
+            <option value="Times New Roman">Times New Roman</option>
+            <option value="Arial">Arial</option>
+        </select>
+        
+        <select id="fontSize" data-lang-key="size">
+            <option value="12">12</option>
+            <option value="14">14</option>
+            <option value="16" selected>16</option>
+        </select>
+        
+        <button data-lang-key="bold" onclick="formatText('bold')"><b>K</b></button>
+        <button data-lang-key="italic" onclick="formatText('italic')"><i>İ</i></button>
+        <button data-lang-key="underline" onclick="formatText('underline')"><u>A</u></button>
+        
+        <select id="headingStyle" data-lang-key="style">
+            <option data-lang-key="normal">Normal</option>
+            <option data-lang-key="heading1">Başlık 1</option>
+            <option data-lang-key="heading2">Başlık 2</option>
+        </select>
+        
+        <button data-lang-key="find" onclick="findText()"></button>
+        <button data-lang-key="replace" onclick="replaceText()"></button>
+    </div>
+
+    <div id="editor" contenteditable="true"></div>
+
+    <div class="status-bar">
+        <span data-lang-key="words">Kelime: <span id="wordCount">0</span></span>
+        <span data-lang-key="page">Sayfa: 1</span>
+    </div>
+
+    <script>
+        // Dil Destek Sistemi
+        const translations = {
+            tr: {
+                new: "Yeni",
+                open: "Aç",
+                save: "Kaydet",
+                font: "Yazı Tipi",
+                size: "Boyut",
+                bold: "Kalın",
+                italic: "İtalik",
+                underline: "Altı Çizili",
+                style: "Stil",
+                normal: "Normal",
+                heading1: "Başlık 1",
+                heading2: "Başlık 2",
+                find: "Bul",
+                replace: "Değiştir",
+                words: "Kelime",
+                page: "Sayfa",
+                saveSuccess: "Başarıyla kaydedildi!",
+                fileError: "Dosya hatası!"
+            },
+            en: {
+                new: "New",
+                open: "Open",
+                save: "Save",
+                font: "Font",
+                size: "Size",
+                bold: "Bold",
+                italic: "Italic",
+                underline: "Underline",
+                style: "Style",
+                normal: "Normal",
+                heading1: "Heading 1",
+                heading2: "Heading 2",
+                find: "Find",
+                replace: "Replace",
+                words: "Words",
+                page: "Page",
+                saveSuccess: "Saved successfully!",
+                fileError: "File error!"
+            }
+        };
+
+        let currentLang = navigator.language.startsWith('tr') ? 'tr' : 'en';
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.dataset.langKey;
+                if (el.tagName === 'OPTION' && el.parentElement.id === 'headingStyle') {
+                    el.textContent = translations[lang][el.dataset.langKey];
+                } else if (el.tagName === 'BUTTON' || el.tagName === 'SELECT') {
+                    el.textContent = translations[lang][key];
+                } else if (el.tagName === 'SPAN') {
+                    const parts = el.childNodes;
+                    parts[0].textContent = translations[lang][key];
+                }
+            });
+            document.getElementById('language').value = lang;
+        }
+
+        // Editör Fonksiyonları
+        const editor = document.getElementById('editor');
+        
+        function newFile() {
+            editor.innerHTML = '';
+        }
+
+        function openFile() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.myorktxt';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    editor.innerHTML = e.target.result;
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        function saveFile() {
+            const content = editor.innerHTML;
+            const blob = new Blob([content], {type: 'text/html'});
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.download = `document.myorktxt`;
+            a.href = url;
+            a.click();
+            
+            alert(translations[currentLang].saveSuccess);
+            URL.revokeObjectURL(url);
+        }
+
+        // Dil Yükleyici
+        document.addEventListener('DOMContentLoaded', () => {
+            changeLanguage(currentLang);
+        });
+    </script>
+</body>
+</html>

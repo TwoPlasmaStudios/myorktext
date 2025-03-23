@@ -1,33 +1,84 @@
-MyorkText Editor
-MyorkText Editor is a versatile writing program for myork designed to help you create and edit documents with ease. It supports multiple languages and provides a rich set of features to enhance your writing experience.
+MYORKTEXT EDITOR - .MYORKTXT FILE EDITOR
+=========================================
 
-Features
-New Document: Start a new document with a single click.
-Open Document: Open and edit existing .myorktxt files.
-Save Document: Save your documents in .myorktxt format.
-Font and Size Options: Choose from a variety of fonts and sizes to customize your text.
-Text Formatting: Apply bold, italic, and underline styles to your text.
-Heading Styles: Use different heading styles to organize your content.
-Find and Replace: Easily find and replace text within your document.
-Word Count: Keep track of the number of words in your document.
-Page Count: View the current page number.
-Installation
-To use MyorkText Editor, simply clone this repository and open the index.html file in your web browser.
+FEATURES
+---------
+- Dual Language Support (English/Turkish)
+- Custom File Format (.myorktxt)
+- Rich Text Editing:
+  * Font family & size selection
+  * Bold/Italic/Underline
+  * Heading styles
+- Smart File Management:
+  * New file creation
+  * Local file open/save
+- Advanced Tools:
+  * Find/Replace
+  * Real-time word counter
+  * Responsive design
+- Cross-browser compatibility
 
-sh
-git clone https://github.com/TwoPlasmaStudios/myorktext.git
-cd myorktext
-open index.html
-Usage
-Language Selection: Use the language switcher at the top right corner to change the interface language between Turkish and English.
-Toolbar: Use the toolbar buttons to create a new document, open an existing one, save your work, and apply text formatting.
-Editor: Write and edit your content in the main editor area.
-Status Bar: Monitor the word count and page count in the status bar at the bottom of the editor.
-Language Support
-MyorkText Editor supports both Turkish and English languages. You can switch between languages using the dropdown menu in the top right corner.
+INSTALLATION
+------------
+1. Clone repository:
+   git clone https://github.com/yourusername/myorktext-editor.git
+2. Open index.html in any modern browser
+3. No server required - works offline!
 
-Contributing
-We welcome contributions to MyorkText Editor. Feel free to open issues or submit pull requests to improve the project.
+USAGE GUIDE
+-----------
+[FILE OPERATIONS]
+- New File:    Ctrl+N / Click "New"
+- Open File:   Ctrl+O / Click "Open" (.myorktxt only)
+- Save File:   Ctrl+S / Click "Save" (saves as .myorktxt)
 
-License
-This project is licensed under the MIT License. See the LICENSE file for more details
+[TEXT FORMATTING]
+1. Select text
+2. Choose formatting from toolbar
+3. Styles persist automatically
+
+[LANGUAGE SWITCHING]
+Use top-right dropdown to select between English/Turkish
+
+TECHNICAL SPECIFICATIONS
+------------------------
+Component          | Technology
+-------------------|-----------
+File Operations    | HTML5 File API
+Text Rendering     | Contenteditable DIV
+Language System    | Dynamic DOM Manipulation
+Style Management   | CSS Variables
+
+.MYORKTXT FILE FORMAT
+---------------------
+- Plain text format with embedded styling
+- UTF-8 encoding
+- Human-readable structure
+- Compatible with all text editors
+
+ROADMAP
+-------
+[✓] Core editor features
+[ ] Version control system
+[ ] Cloud integration
+[ ] Plugin ecosystem
+
+CONTRIBUTING
+------------
+1. Fork repository
+2. Create feature branch (git checkout -b feature/your-feature)
+3. Commit changes (git commit -am 'Add feature')
+4. Push branch (git push origin feature/your-feature)
+5. Open Pull Request
+
+LICENSE
+-------
+MIT License
+Copyright (c) 2025 Two Plasma Studios
+
+Permission is hereby granted... [Standard MIT License Text]
+
+NOTE
+----
+This is 100% client-side software - no data leaves your computer.
+Privacy-focused design with zero tracking.

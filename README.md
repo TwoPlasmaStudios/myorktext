@@ -21,9 +21,9 @@ FEATURES
 INSTALLATION
 ------------
 1. Clone repository:
-   git clone https://github.com/yourusername/myorktext-editor.git
-2. Open index.html in any modern browser
-3. No server required - works offline!
+   git clone https://github.com/twoplasmastudios/myorktext-editor.git
+3. Open index.html in any modern browser
+4. No server required - works offline!
 
 USAGE GUIDE
 -----------

@@ -1,84 +1,52 @@
-MYORKTEXT EDITOR - .MYORKTXT FILE EDITOR
-=========================================
+# MyorkText
 
-FEATURES
----------
-- Dual Language Support (English/Turkish)
-- Custom File Format (.myorktxt)
-- Rich Text Editing:
-  * Font family & size selection
-  * Bold/Italic/Underline
-  * Heading styles
-- Smart File Management:
-  * New file creation
-  * Local file open/save
-- Advanced Tools:
-  * Find/Replace
-  * Real-time word counter
-  * Responsive design
-- Cross-browser compatibility
+**MyorkText** is a lightweight, browser-based rich-text editor prototype by Two Plasma Studios. The current implementation is a single HTML file and can be opened locally in a modern browser.
 
-INSTALLATION
-------------
-1. Clone repository:
-   git clone https://github.com/twoplasmastudios/myorktext-editor.git
-3. Open index.html in any modern browser
-4. No server required - works offline!
+> **Project status:** Prototype / work in progress. This repository currently contains a single-page editor rather than a packaged desktop application. Some browser editing commands may behave differently between browsers.
 
-USAGE GUIDE
------------
-[FILE OPERATIONS]
-- New File:    Ctrl+N / Click "New"
-- Open File:   Ctrl+O / Click "Open" (.myorktxt only)
-- Save File:   Ctrl+S / Click "Save" (saves as .myorktxt)
+## Current features
 
-[TEXT FORMATTING]
-1. Select text
-2. Choose formatting from toolbar
-3. Styles persist automatically
+- Turkish and English interface toggle
+- Create a new document
+- Open and save documents using the `.myorktxt` extension
+- Rich-text editing through the browser's content-editable surface
+- Font family and size controls
+- Bold, italic and underline
+- Normal text, Heading 1 and Heading 2 styles
+- Left, center, right and justified alignment
+- Text and highlight color controls
+- Find and replace prompts
+- Live word counter
 
-[LANGUAGE SWITCHING]
-Use top-right dropdown to select between English/Turkish
+## Run it
 
-TECHNICAL SPECIFICATIONS
-------------------------
-Component          | Technology
--------------------|-----------
-File Operations    | HTML5 File API
-Text Rendering     | Contenteditable DIV
-Language System    | Dynamic DOM Manipulation
-Style Management   | CSS Variables
+1. Clone or download this repository.
+2. Open `program/myorktext.html` in a current desktop browser.
+3. Use **New**, **Open** and **Save** from the toolbar.
 
-.MYORKTXT FILE FORMAT
----------------------
-- Plain text format with embedded styling
-- UTF-8 encoding
-- Human-readable structure
-- Compatible with all text editors
+No package installation or build step is required for the current HTML prototype.
 
-ROADMAP
--------
-[✓] Core editor features
-[ ] Version control system
-[ ] Cloud integration
-[ ] Plugin ecosystem
+## Important limitations
 
-CONTRIBUTING
-------------
-1. Fork repository
-2. Create feature branch (git checkout -b feature/your-feature)
-3. Commit changes (git commit -am 'Add feature')
-4. Push branch (git push origin feature/your-feature)
-5. Open Pull Request
+- The editor relies on browser editing APIs such as `document.execCommand`; support and formatting behavior can vary.
+- Files are handled locally by the browser. There is no account system, cloud sync or online storage.
+- The `.myorktxt` format currently stores editor HTML content; it is not yet a formally versioned document format.
+- This project should be considered an early prototype, not a production word processor.
 
-LICENSE
--------
-MIT License
-Copyright (c) 2025 Two Plasma Studios
+## Roadmap
 
-Permission is hereby granted... [Standard MIT License Text]
+- Improve document format and import/export reliability
+- Add autosave and recovery
+- Improve accessibility and keyboard shortcuts
+- Add automated browser tests
+- Package the editor for desktop use if needed
 
-NOTE
-----
-This is 100% client-side software - no data leaves your computer.
-Privacy-focused design with zero tracking.
+## Links
+
+- **Studio website:** https://twoplasmastudios.github.io/
+- **All studio projects:** https://twoplasmastudios.github.io/projects.html
+- **Source code:** https://github.com/TwoPlasmaStudios/myorktext
+
+---
+
+Made by **Two Plasma Studios**.

@@ -85,9 +85,9 @@
         </select>
         
         <select id="fontSize" data-lang-key="size" onchange="changeFontSize(this.value)">
-            <option value="12">12</option>
-            <option value="14">14</option>
-            <option value="16" selected>16</option>
+            <option value="2">12</option>
+            <option value="4" selected>16</option>
+            <option value="5">18</option>
         </select>
         
         <button data-lang-key="bold" onclick="formatText('bold')"><b>K</b></button>
@@ -237,15 +237,18 @@
         }
 
         function changeHeadingStyle(style) {
-            if (style === 'normal') {
-                document.execCommand('formatBlock', false, 'p');
-            } else {
-                document.execCommand('formatBlock', false, style);
-            }
+            const tag = style === 'heading1' ? 'h1' : style === 'heading2' ? 'h2' : 'p';
+            document.execCommand('formatBlock', false, tag);
         }
 
         function alignText(alignment) {
-            document.execCommand('justify' + alignment.charAt(0).toUpperCase() + alignment.slice(1));
+            const commandMap = {
+                left: 'justifyLeft',
+                center: 'justifyCenter',
+                right: 'justifyRight',
+                justify: 'justifyFull'
+            };
+            document.execCommand(commandMap[alignment]);
         }
 
         function changeTextColor(color) {

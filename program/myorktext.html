@@ -167,16 +167,27 @@
         let currentLang = navigator.language.startsWith('tr') ? 'tr' : 'en';
 
         function changeLanguage(lang) {
+            if (!translations[lang]) return;
             currentLang = lang;
             document.querySelectorAll('[data-lang-key]').forEach(el => {
                 const key = el.dataset.langKey;
                 if (el.tagName === 'OPTION' && el.parentElement.id === 'headingStyle') {
-                    el.textContent = translations[lang][el.dataset.langKey];
-                } else if (el.tagName === 'BUTTON' || el.tagName === 'SELECT') {
-                    el.textContent = translations[lang][key];
-                } else if (el.tagName === 'SPAN') {
-                    const parts = el.childNodes;
-                    parts[0].textContent = translations[lang][key];
+                    if (translations[lang][key]) el.textContent = translations[lang][key];
+                } else if (el.tagName === 'SELECT') {
+                    return;
+                } else if (el.tagName === 'BUTTON') {
+                    if (translations[lang][key]) {
+                        const icon = el.querySelector('b, i, u');
+                        if (icon) {
+                            el.setAttribute('aria-label', translations[lang][key]);
+                            el.title = translations[lang][key];
+                        } else {
+                            el.textContent = translations[lang][key];
+                        }
+                    }
+                } else if (el.tagName === 'SPAN' && translations[lang][key]) {
+                    const textNode = Array.from(el.childNodes).find(node => node.nodeType === Node.TEXT_NODE);
+                    if (textNode) textNode.textContent = translations[lang][key] + ': ';
                 }
             });
             document.getElementById('language').value = lang;
@@ -226,6 +237,39 @@
         document.addEventListener('DOMContentLoaded', () => {
             changeLanguage(currentLang);
         });
+
+        function formatText(command) {
+            editor.focus();
+            document.execCommand(command, false, null);
+        }
+
+        function findText() {
+            const query = prompt(currentLang === 'tr' ? 'Bulunacak metin:' : 'Text to find:');
+            if (!query) return;
+            editor.focus();
+            const found = typeof window.find === 'function' && window.find(query);
+            if (!found) alert(currentLang === 'tr' ? 'Metin bulunamadı.' : 'Text not found.');
+        }
+
+        function replaceText() {
+            const query = prompt(currentLang === 'tr' ? 'Bulunacak metin:' : 'Text to find:');
+            if (!query) return;
+            const replacement = prompt(currentLang === 'tr' ? 'Yeni metin:' : 'Replace with:');
+            if (replacement === null) return;
+            let replaced = 0;
+            const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+            const nodes = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode);
+            nodes.forEach(node => {
+                if (node.nodeValue.includes(query)) {
+                    const parts = node.nodeValue.split(query);
+                    replaced += parts.length - 1;
+                    node.nodeValue = parts.join(replacement);
+                }
+            });
+            updateWordCount();
+            if (!replaced) alert(currentLang === 'tr' ? 'Metin bulunamadı.' : 'Text not found.');
+        }
 
         // Yeni Fonksiyonlar
         function changeFontFamily(font) {

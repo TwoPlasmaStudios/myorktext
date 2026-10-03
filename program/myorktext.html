@@ -137,6 +137,7 @@
             <option value="swift">Swift</option>
         </select>
         <button data-lang-key="export" onclick="showExportMenu()"></button>
+        <button data-lang-key="runCode" onclick="runCodeSnippet()"></button>
         
         <select id="fontFamily" data-lang-key="font" onchange="changeFontFamily(this.value)">
             <option value="Aptos">Aptos</option>
@@ -183,8 +184,9 @@
 
     <div class="status-bar">
         <span data-lang-key="words">Kelime: <span id="wordCount">0</span></span>
-        <span data-lang-key="page">Sayfa: 1</span>
+        <span><span data-lang-key="page">Sayfa: 1</span> · <span id="autosaveStatus">Auto-save ready</span></span>
     </div>
+    <div id="toast" role="status" aria-live="polite" style="position:fixed;left:50%;bottom:22px;transform:translate(-50%,12px);opacity:0;pointer-events:none;z-index:99999;padding:10px 14px;border-radius:10px;background:#111827;color:#fff;transition:opacity .2s,transform .2s;"></div>
 
     <script>
         // Dil Destek Sistemi
@@ -213,6 +215,7 @@
                 bullet: "Madde",
                 numbered: "Numaralı",
                 export: "Dışa Aktar",
+                runCode: "HTML/JS Çalıştır",
                 saveSuccess: "Başarıyla kaydedildi!",
                 fileError: "Dosya hatası!"
             },
@@ -240,6 +243,7 @@
                 bullet: "Bullets",
                 numbered: "Numbered",
                 export: "Export",
+                runCode: "Run HTML/JS",
                 saveSuccess: "Saved successfully!",
                 fileError: "File error!"
             }
@@ -253,7 +257,7 @@
                 const key = el.dataset.langKey;
                 if (el.tagName === 'OPTION' && el.parentElement.id === 'headingStyle') {
                     el.textContent = translations[lang][el.dataset.langKey];
-                } else if (el.tagName === 'BUTTON' || el.tagName === 'SELECT') {
+                } else if (el.tagName === 'BUTTON') {
                     el.textContent = translations[lang][key];
                 } else if (el.tagName === 'SPAN') {
                     const parts = el.childNodes;
@@ -466,9 +470,29 @@
 
         // Editör Fonksiyonları
         const editor = document.getElementById('editor');
+        const AUTOSAVE_KEY = 'myorktext_autosave_v2';
+        const autosaveStatus = document.getElementById('autosaveStatus');
+        const toast = document.getElementById('toast');
+        let autosaveTimer = null;
+        let toastTimer = null;
+        function showToast(message) {
+            toast.textContent = message; toast.style.opacity='1'; toast.style.transform='translate(-50%,0)';
+            clearTimeout(toastTimer); toastTimer=setTimeout(()=>{toast.style.opacity='0';toast.style.transform='translate(-50%,12px)';},2200);
+        }
+        function scheduleAutosave() {
+            autosaveStatus.textContent='Saving draft…'; clearTimeout(autosaveTimer);
+            autosaveTimer=setTimeout(()=>{try{localStorage.setItem(AUTOSAVE_KEY,JSON.stringify({format:'myorktext',version:2,lang:currentLang,content:editor.innerHTML,savedAt:new Date().toISOString()}));autosaveStatus.textContent='Draft saved';}catch(error){autosaveStatus.textContent='Local save unavailable';}},500);
+        }
+        function recoverDraft() {
+            try { const raw=localStorage.getItem(AUTOSAVE_KEY); if(!raw)return; const draft=JSON.parse(raw); if(!draft||typeof draft.content!=='string')return; editor.innerHTML=draft.content; if(draft.lang&&translations[draft.lang])changeLanguage(draft.lang); autosaveStatus.textContent='Draft recovered'; showToast('Recovered local draft'); } catch(error){autosaveStatus.textContent='Draft unavailable';}
+        }
         
         function newFile() {
+            if (editor.innerText.trim() && !confirm('Create a new document? Unsaved content in this editor will be replaced.')) return;
             editor.innerHTML = '';
+            updateWordCount();
+            try { localStorage.removeItem(AUTOSAVE_KEY); } catch (error) {}
+            autosaveStatus.textContent = 'New document';
         }
 
         function openFile() {
@@ -482,6 +506,8 @@
                 
                 reader.onload = function(e) {
                     editor.innerHTML = e.target.result;
+                    updateWordCount();
+                    scheduleAutosave();
                 };
                 
                 reader.readAsText(file);
@@ -492,7 +518,7 @@
 
         function saveFile() {
             const content = editor.innerHTML;
-            const blob = new Blob([content], {type: 'text/html'});
+            const blob = new Blob([content], {type: 'text/html;charset=utf-8'});
             const url = URL.createObjectURL(blob);
             
             const a = document.createElement('a');
@@ -500,13 +526,25 @@
             a.href = url;
             a.click();
             
-            alert(translations[currentLang].saveSuccess);
             URL.revokeObjectURL(url);
+            scheduleAutosave();
+            autosaveStatus.textContent = 'Saved to file';
+            showToast(translations[currentLang].saveSuccess);
         }
 
         // Dil Yükleyici
         document.addEventListener('DOMContentLoaded', () => {
             changeLanguage(currentLang);
+            recoverDraft();
+            updateWordCount();
+        });
+
+        document.addEventListener('keydown', event => {
+            if (!(event.ctrlKey || event.metaKey)) return;
+            const key = event.key.toLowerCase();
+            if (key === 's') { event.preventDefault(); saveFile(); }
+            else if (key === 'o') { event.preventDefault(); openFile(); }
+            else if (key === 'n') { event.preventDefault(); newFile(); }
         });
 
         // Yeni Fonksiyonlar
@@ -540,6 +578,35 @@
         function changeBackgroundColor(color) {
             document.execCommand('hiliteColor', false, color);
         }
+
+
+        function runCodeSnippet() {
+            const language = document.getElementById('codeLanguage').value;
+            if (!['html', 'javascript', 'jsx', 'tsx'].includes(language)) {
+                showToast('Browser preview supports HTML and JavaScript. Other languages remain editable code.');
+                return;
+            }
+            const code = prompt('Paste HTML or JavaScript to run in a sandboxed preview:', '');
+            if (code === null) return;
+            const preview = window.open('', '_blank');
+            if (!preview) { showToast('Allow pop-ups to open the preview.'); return; }
+            preview.document.open();
+            preview.document.write('<!doctype html><html><head><meta charset="utf-8"><title>MyorkText Code Preview</title><style>body{font-family:Arial;padding:20px}pre{white-space:pre-wrap}</style></head><body><h2>MyorkText Preview</h2><p>HTML/JavaScript preview runs in a sandboxed frame.</p><div id="preview-root"></div></body></html>');
+            preview.document.close();
+            const frame = preview.document.createElement('iframe');
+            frame.setAttribute('sandbox', 'allow-scripts');
+            frame.style.cssText = 'width:100%;height:75vh;border:1px solid #ccc;border-radius:8px';
+            preview.document.body.appendChild(frame);
+            const source = language === 'javascript'
+                ? '<!doctype html><html><body><div id="app"></div><script>' + code.replace(/<\/script/gi, '<\\/script') + '<\/script></body></html>'
+                : code;
+            frame.srcdoc = source;
+        }
+
+        editor.addEventListener('input', () => {
+            updateWordCount();
+            scheduleAutosave();
+        });
 
         // Kelime Sayacı
         editor.addEventListener('input', updateWordCount);

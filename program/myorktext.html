@@ -9,6 +9,8 @@
             --toolbar-bg: #f8f9fa;
             --toolbar-border: #dee2e6;
             --button-hover: #e9ecef;
+            --code-bg: #111827;
+            --code-fg: #e5e7eb;
         }
 
         body {
@@ -39,6 +41,36 @@
             background: var(--button-hover);
         }
 
+        .myork-code {
+            display: block;
+            margin: 14px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background: var(--code-bg);
+            color: var(--code-fg);
+            border: 1px solid #374151;
+            font-family: "Cascadia Code", Consolas, monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        .myork-code::before {
+            content: attr(data-language);
+            display: block;
+            color: #9ca3af;
+            font-size: 11px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+        }
+
+        .myork-attachment {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
         #editor {
             width: 100%;
             height: 90vh;
@@ -64,6 +96,8 @@
             right: 10px;
         }
     </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusv+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </head>
 <body>
     <div class="lang-switcher">
@@ -77,6 +111,32 @@
         <button data-lang-key="new" onclick="newFile()"></button>
         <button data-lang-key="open" onclick="openFile()"></button>
         <button data-lang-key="save" onclick="saveFile()"></button>
+        <button data-lang-key="code" onclick="insertCodeBlock()"></button>
+        <button data-lang-key="image" onclick="insertImage()"></button>
+        <button data-lang-key="table" onclick="insertTable()"></button>
+        <button data-lang-key="link" onclick="insertLink()"></button>
+        <button data-lang-key="bullet" onclick="toggleList('unordered')"></button>
+        <button data-lang-key="numbered" onclick="toggleList('ordered')"></button>
+        <select id="codeLanguage" aria-label="Code language">
+            <option value="javascript">JavaScript</option>
+            <option value="typescript">TypeScript</option>
+            <option value="python">Python</option>
+            <option value="html">HTML</option>
+            <option value="css">CSS</option>
+            <option value="java">Java</option>
+            <option value="dart">Dart</option>
+            <option value="jsx">React / JSX</option>
+            <option value="tsx">React / TSX</option>
+            <option value="json">JSON</option>
+            <option value="sql">SQL</option>
+            <option value="cpp">C++</option>
+            <option value="csharp">C#</option>
+            <option value="go">Go</option>
+            <option value="rust">Rust</option>
+            <option value="kotlin">Kotlin</option>
+            <option value="swift">Swift</option>
+        </select>
+        <button data-lang-key="export" onclick="showExportMenu()"></button>
         
         <select id="fontFamily" data-lang-key="font" onchange="changeFontFamily(this.value)">
             <option value="Aptos">Aptos</option>
@@ -110,6 +170,13 @@
         
         <input type="color" onchange="changeTextColor(this.value)">
         <input type="color" onchange="changeBackgroundColor(this.value)">
+        <div id="exportMenu" style="display:none;gap:6px;align-items:center;">
+            <button onclick="exportHTML()">HTML</button>
+            <button onclick="exportPDF()">PDF</button>
+            <button onclick="exportImage('png')">PNG</button>
+            <button onclick="exportImage('jpeg')">JPEG</button>
+            <button onclick="exportDOCX()">DOCX</button>
+        </div>
     </div>
 
     <div id="editor" contenteditable="true"></div>
@@ -139,6 +206,13 @@
                 replace: "Değiştir",
                 words: "Kelime",
                 page: "Sayfa",
+                code: "Kod",
+                image: "Görsel",
+                table: "Tablo",
+                link: "Bağlantı",
+                bullet: "Madde",
+                numbered: "Numaralı",
+                export: "Dışa Aktar",
                 saveSuccess: "Başarıyla kaydedildi!",
                 fileError: "Dosya hatası!"
             },
@@ -159,6 +233,13 @@
                 replace: "Replace",
                 words: "Words",
                 page: "Page",
+                code: "Code",
+                image: "Image",
+                table: "Table",
+                link: "Link",
+                bullet: "Bullets",
+                numbered: "Numbered",
+                export: "Export",
                 saveSuccess: "Saved successfully!",
                 fileError: "File error!"
             }
@@ -180,6 +261,207 @@
                 }
             });
             document.getElementById('language').value = lang;
+        }
+
+        // Office-style extensions
+
+        function insertCodeBlock() {
+            const language = document.getElementById('codeLanguage').value;
+            const code = prompt('Kod bloğunu girin:', '');
+            if (code === null) return;
+
+            const safe = code.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            const block = '<pre class="myork-code" data-language="' + language + '" contenteditable="true"><code>' + safe + '</code></pre><p><br></p>';
+            document.execCommand('insertHTML', false, block);
+            scheduleAutosave();
+        }
+
+        function insertImage() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/png,image/jpeg,image/gif,image/webp,image/svg+xml';
+            input.onchange = event => {
+                const file = event.target.files && event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = loadEvent => {
+                    const img = '<img class="myork-attachment" src="' + loadEvent.target.result + '" alt="' +
+                        file.name.replace(/"/g, '&quot;') + '">';
+                    document.execCommand('insertHTML', false, img);
+                    scheduleAutosave();
+                };
+                reader.readAsDataURL(file);
+            };
+            input.click();
+        }
+
+        function insertTable() {
+            const rows = Math.max(1, Math.min(20, parseInt(prompt('Satır sayısı:', '3') || '0', 10)));
+            const cols = Math.max(1, Math.min(12, parseInt(prompt('Sütun sayısı:', '3') || '0', 10)));
+            if (!Number.isFinite(rows) || !Number.isFinite(cols)) return;
+
+            let table = '<table style="border-collapse:collapse;width:100%;margin:14px 0;"><tbody>';
+            for (let r = 0; r < rows; r++) {
+                table += '<tr>';
+                for (let c = 0; c < cols; c++) {
+                    const tag = r === 0 ? 'th' : 'td';
+                    table += '<' + tag + ' contenteditable="true" style="border:1px solid #d1d5db;padding:8px;text-align:left;">' +
+                        (r === 0 ? 'Başlık ' + (c + 1) : '') + '</' + tag + '>';
+                }
+                table += '</tr>';
+            }
+            table += '</tbody></table><p><br></p>';
+            document.execCommand('insertHTML', false, table);
+            scheduleAutosave();
+        }
+
+        function insertLink() {
+            const url = prompt('Bağlantı adresi:', 'https://');
+            if (!url) return;
+            document.execCommand('createLink', false, url);
+            scheduleAutosave();
+        }
+
+        function toggleList(type) {
+            document.execCommand(type === 'ordered' ? 'insertOrderedList' : 'insertUnorderedList');
+            scheduleAutosave();
+        }
+
+        function showExportMenu() {
+            const menu = document.getElementById('exportMenu');
+            menu.style.display = menu.style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function exportHTML() {
+            const html = '<!doctype html><html><head><meta charset="utf-8"><title>MyorkText Document</title><style>body{font-family:Arial,sans-serif;max-width:850px;margin:40px auto;padding:0 24px;line-height:1.6}.myork-code{background:#111827;color:#e5e7eb;padding:14px;border-radius:8px;white-space:pre-wrap}</style></head><body>' + editor.innerHTML + '</body></html>';
+            downloadBlob(new Blob([html], {type:'text/html;charset=utf-8'}), 'document.html');
+        }
+
+        async function exportPDF() {
+            if (typeof html2pdf !== 'function') {
+                showToast('PDF export library is unavailable.');
+                return;
+            }
+            const clone = editor.cloneNode(true);
+            clone.style.width = '850px';
+            clone.style.padding = '30px';
+            clone.style.background = 'white';
+            clone.style.color = 'black';
+
+            const holder = document.createElement('div');
+            holder.style.position = 'fixed';
+            holder.style.left = '-100000px';
+            holder.appendChild(clone);
+            document.body.appendChild(holder);
+
+            try {
+                await html2pdf().set({
+                    margin: 0.45,
+                    filename: 'document.pdf',
+                    image: {type:'jpeg', quality:0.96},
+                    html2canvas: {scale:2, useCORS:true},
+                    jsPDF: {unit:'in', format:'a4', orientation:'portrait'}
+                }).from(clone).save();
+            } finally {
+                holder.remove();
+            }
+        }
+
+        async function exportImage(type) {
+            if (typeof html2canvas !== 'function') {
+                showToast('Image export library is unavailable.');
+                return;
+            }
+
+            const canvas = await html2canvas(editor, {backgroundColor:'#ffffff', scale:2, useCORS:true});
+            canvas.toBlob(blob => {
+                if (blob) downloadBlob(blob, 'document.' + (type === 'jpeg' ? 'jpg' : 'png'));
+            }, type === 'jpeg' ? 'image/jpeg' : 'image/png', 0.95);
+        }
+
+        async function exportDOCX() {
+            try {
+                const { Document, Packer, Paragraph, TextRun, HeadingLevel, ImageRun } = await import('https://esm.sh/docx@9.8.1');
+
+                const children = [];
+                const root = editor.cloneNode(true);
+
+                async function addNode(node) {
+                    if (node.nodeType !== Node.ELEMENT_NODE) return;
+                    const tag = node.tagName.toLowerCase();
+
+                    if (/^h[1-6]$/.test(tag)) {
+                        children.push(new Paragraph({
+                            heading: HeadingLevel['HEADING_' + tag.substring(1)],
+                            children: [new TextRun(node.textContent || '')]
+                        }));
+                        return;
+                    }
+
+                    if (tag === 'pre' && node.classList.contains('myork-code')) {
+                        children.push(new Paragraph({
+                            children: [new TextRun({
+                                text: '[' + (node.dataset.language || 'text') + ']\n' + (node.textContent || ''),
+                                font: 'Cascadia Code',
+                                size: 20
+                            })]
+                        }));
+                        return;
+                    }
+
+                    if (tag === 'img' && node.src && node.src.startsWith('data:')) {
+                        const match = node.src.match(/^data:(image\/(png|jpeg|jpg|gif));base64,(.+)$/);
+                        if (match) {
+                            const bytes = Uint8Array.from(atob(match[3]), char => char.charCodeAt(0));
+                            children.push(new Paragraph({
+                                children: [new ImageRun({
+                                    data: bytes,
+                                    transformation: {width: 500, height: 300},
+                                    type: match[2] === 'jpg' ? 'jpg' : match[2]
+                                })]
+                            }));
+                        }
+                        return;
+                    }
+
+                    const text = (node.innerText || node.textContent || '').trim();
+                    if (text) {
+                        children.push(new Paragraph({
+                            children: [new TextRun(text)]
+                        }));
+                    }
+                }
+
+                for (const child of root.children) {
+                    await addNode(child);
+                }
+
+                if (!children.length) {
+                    children.push(new Paragraph({children:[new TextRun('')]}));
+                }
+
+                const doc = new Document({
+                    sections: [{children}]
+                });
+
+                const blob = await Packer.toBlob(doc);
+                downloadBlob(blob, 'document.docx');
+            } catch (error) {
+                console.error(error);
+                showToast('DOCX export failed. Please check your connection and try again.');
+            }
         }
 
         // Editör Fonksiyonları
